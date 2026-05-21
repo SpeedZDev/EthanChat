@@ -5,7 +5,7 @@ from langchain.agents import create_agent
 from langchain_community.document_loaders import PyMuPDFLoader
 import streamlit as st
 from langchain_core.messages import HumanMessage, AIMessage
-
+import tempfile
 
 
 load_dotenv()
@@ -19,10 +19,23 @@ Tools = [WebSearchTool]
 SystemPrompt = "You are a General AI Information Assistant that Answers Questions and helps Users On general Everday Actives. When Questions are asks you find the *MOST UP TO DATE* sources from the current date regargding the subject and put these sources that use in a neatly fromatted list! When User Uploads documents Scan these doucments and do as the user asks with these documents"
 Model = create_agent(AgentModel, tools=Tools, system_prompt=SystemPrompt)
 
+def LoadUploadedFiles(UploadedFiles):
+    if UploadedFiles is None:
+        return ""
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as TemporaryFile:
+        TemporaryFile.write(UploadedFiles.read())
+        TemporaryPath = TemporaryFile.name
+        
+    loader = PyMuPDFLoader(TemporaryPath, mode="single",pages_delimiter="\n\n Page Break \n\n")
+    docs = loader.load()
+    return docs[0].page_content
 
-
-def ProcessChat(model):
+def ProcessChat(model, FileContext = ""):
     messages = []
+   
+    if FileContext:
+        messages.append(HumanMessage(content=f"Uploaded File Content: {FileContext}"))
    
     for message in st.session_state["ChatHistory"]:
         if message["Role"] == "user":
@@ -42,13 +55,16 @@ for message in st.session_state["ChatHistory"]:
     
 
 UserQuery = st.chat_input(placeholder="Enter Prompt Here Or Upload files")
-FileUploader = st.file_uploader(label="Upload Files Here", label_visibility="collapsed")
+FileUploader = st.file_uploader(label="Upload Files Here", type="pdf")
+
 if UserQuery != "quit" and UserQuery:
     with st.chat_message("user"):
         st.markdown(UserQuery)
     
     st.session_state["ChatHistory"].append({"Role": "user", "Content": UserQuery})
-    Response = ProcessChat(Model)
+    
+    FileContext = LoadUploadedFiles(FileUploader)
+    Response = ProcessChat(Model, FileContext)
 
     with st.chat_message("assistant"):
         st.markdown(Response["messages"][-1].content)
@@ -56,9 +72,6 @@ if UserQuery != "quit" and UserQuery:
         
     st.session_state["ChatHistory"].append({"Role": "assistant","Content": Response["messages"][-1].content})
     st.write(st.session_state["ChatHistory"])
-else:
-    for key in st.session_state.keys():
-        del st.session_state[key]
     
 
 
