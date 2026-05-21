@@ -71,7 +71,7 @@ if UserQuery != "quit" and UserQuery:
        
         
     st.session_state["ChatHistory"].append({"Role": "assistant","Content": Response["messages"][-1].content})
-    st.write(st.session_state["ChatHistory"])
+  
     
 
 
