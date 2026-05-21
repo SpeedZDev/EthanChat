@@ -26,7 +26,6 @@ Big Brother is a Streamlit-based AI assistant built with LangChain. It can answe
 
 ### Streamlit App
 
-Add your deployed Streamlit link here:
 
 ```txt
 [[https://your-streamlit-app-link-here.streamlit.app](https://bigbrother-ttwc3mlmo4qweuexefbsju.streamlit.app/)](https://bigbrother-ttwc3mlmo4qweuexefbsju.streamlit.app/)
